@@ -60,6 +60,8 @@ class BitmapUtils {
         // Get the dimensions of the original bitmap
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
+        // // TODO: 2018-02-04 : figure out why no faces detected
+        bmOptions.inPreferredConfig = Bitmap.Config.RGB_565;
         BitmapFactory.decodeFile(imagePath, bmOptions);
         int photoW = bmOptions.outWidth;
         int photoH = bmOptions.outHeight;
@@ -70,6 +72,7 @@ class BitmapUtils {
         // Decode the image file into a Bitmap sized to fill the View
         bmOptions.inJustDecodeBounds = false;
         bmOptions.inSampleSize = scaleFactor;
+
 
         return BitmapFactory.decodeFile(imagePath);
     }

@@ -21,6 +21,9 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -38,6 +41,8 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+
+import static android.R.attr.bitmap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -158,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
         // If the image capture activity was called and was successful
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             // Process the image and set it to the TextView
-            processAndSetImage();
+            rotateImage(processAndSetImage());
         } else {
 
             // Otherwise, delete the temporary image file
@@ -169,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Method for processing the captured image and setting it to the TextView.
      */
-    private void processAndSetImage() {
+    private Bitmap processAndSetImage() {
 
         // Toggle Visibility of the views
         mEmojifyButton.setVisibility(View.GONE);
@@ -178,15 +183,40 @@ public class MainActivity extends AppCompatActivity {
         mShareFab.setVisibility(View.VISIBLE);
         mClearFab.setVisibility(View.VISIBLE);
 
+
+
         // Resample the saved image to fit the ImageView
         mResultsBitmap = BitmapUtils.resamplePic(this, mTempPhotoPath);
-        
+        rotateImage(mResultsBitmap);
+
         // Detect the faces
-        Emojifier.detectFaces(this, mResultsBitmap);
-        // TODO (10): Change the method call from detectFaces() to detectFacesAndOverlayEmoji() and assign the result to mResultsBitmap.
+        Emojifier.detectFacesAndOverlayEmoji(this, mResultsBitmap);
+        // TODO (10): Change the method call from detectFacesAndOverlayEmoji() to detectFacesAndOverlayEmoji() and assign the result to mResultsBitmap.
         
         // Set the new bitmap to the ImageView
-        mImageView.setImageBitmap(mResultsBitmap);
+        //mImageView.setImageBitmap(mResultsBitmap);
+        return mResultsBitmap;
+    }
+    private void rotateImage(Bitmap picture) {
+        ExifInterface exifInterface = null;
+        try {
+            exifInterface = new ExifInterface(mTempPhotoPath);
+        } catch (Exception e) {
+
+        }
+        int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,ExifInterface.ORIENTATION_UNDEFINED);
+        Matrix matrix = new Matrix();
+        switch (orientation){
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.setRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.setRotate(180);
+                break;
+            default:
+        }
+        Bitmap rotatedBitmap = Bitmap.createBitmap(picture,0,0, picture.getWidth(),picture.getHeight(), matrix, true);
+        mImageView.setImageBitmap(rotatedBitmap);
     }
 
 
